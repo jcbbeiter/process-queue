@@ -1,8 +1,10 @@
 #include <iostream>
 #include <cstring>
 #include <string>
+#include <sys/types.h>
 
 #include "config.h"
+#include "log.h"
 
 // Jacob Beiter
 // Operating Systems - Project 02: pq
@@ -38,9 +40,6 @@ config_struct read_args(int argc, char* argv[]) {
 
     config_struct config;
 
-    if(argc == 1)
-        usage(1);
-
     //read command line arguments
     int argind = 1;
     
@@ -54,7 +53,6 @@ config_struct read_args(int argc, char* argv[]) {
 
         switch (arg[1]) {
             case 'h':
-                std::cout << "printing usage..." << std::endl;
                 usage(0);
                 break;
             case 'f':
@@ -72,7 +70,7 @@ config_struct read_args(int argc, char* argv[]) {
                     else if(strcmp(argv[argind],"mlfq") == 0)
                         config.policy = SCHEDULE_MLFQ;
                     else {
-                        //TODO: print error
+                        log_exit(LOG_ERROR, "Unknown scheduling policy \"" + std::string(argv[argind]) + "\"");
                     }
                 break;
             case 't':
@@ -86,11 +84,11 @@ config_struct read_args(int argc, char* argv[]) {
 
     //if we've read all arguments, should run process as the server
     if(argind == argc) {
-        config.server = true;
+        config.is_server = true;
         return config;
     }
     else { //otherwise, it's the client
-        config.server = false;
+        config.is_server = false;
         config.client_option = argv[argind];
         if(config.client_option == "add") {
             config.command = "";
@@ -98,20 +96,17 @@ config_struct read_args(int argc, char* argv[]) {
                 config.command += argv[argind];
             }
             if(config.command == "") {
-                //TODO: error here
-                std::cout << "ERROR: no command to add" << std::endl;
+                log_exit(LOG_ERROR, "No command to add to server, exiting...");
             }
         }
         else if (config.client_option != "status" &&
                     config.client_option != "running" &&
                     config.client_option != "waiting" &&
                     config.client_option != "flush") {
-            //TODO: error
-            std::cout << "ERROR: invalid command " << config.client_option << std::endl;
+            log_exit(LOG_ERROR, "Invalid client command \"" + config.client_option + "\", exiting...");
         }
         else if (argind != argc-1) { //none of the other options should have anything after
-            //TODO: Log error
-            std::cout << "ERROR: too many arguments" << std::endl;
+            log_exit(LOG_ERROR,"Too many command line arguments, exiting...");
         }
     }
 

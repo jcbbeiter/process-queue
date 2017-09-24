@@ -8,6 +8,7 @@
 // config.h
 
 void usage(int exit_code);
+void log(int type, std::string message);
 config_struct read_args(int argc, char* argv[]);
 
 #endif

@@ -89,7 +89,7 @@ We can gather information about each running program by looking at the directory
 >       Note: you may wish to consider how your response to question 6 can help
 >       with this.
 
-Trigger the scheduler when a process dies by setting a signal handler for the SIGCHILD signal. When a process dies the scheduler must calculate its turnaround and response times and remember them for accounting. The child process must also be reaped, which is done by calling wait() in the parent.
+Trigger the scheduler when a process dies by setting a signal handler for the SIGCHILD signal. When a process dies the scheduler must calculate its turnaround and response times and remember them for accounting. The child process must also be reaped, which is done by calling wait() in the parent. Then, if there are no processes running, the scheduler must start the next one in the queue.
 
 > 5. The client and server need to communicate via a request and response
 >    model.
@@ -135,7 +135,8 @@ MLFQ will simply do a priority boost at regular intervals.
 
 
 Question for TA:
-In the MLFQ, if a program that is running blocks for I/O and relinquishes the CPU, another program should run while it's blocking. How should we accomplish this? Should the scheduler run more often than once each time slice, and check if the running program is blocking? Is there a way to do that? Some advice would be appreciated
+In the MLFQ, if a program that is running blocks for I/O and relinquishes the CPU, another program should run while it's blocking. How should we accomplish this? Should the scheduler run more often than once each time slice, and check if the running program is blocking? Is there a way to do that? Some advice would be appreciated.
+
 
 Demonstration
 -------------
