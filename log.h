@@ -8,6 +8,7 @@
 // log.h
 
 void cleanup(int exit_code);
+void log(int type, std::string message);
 void log_exit(int type, std::string message);
 
 #endif

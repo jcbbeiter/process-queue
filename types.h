@@ -13,17 +13,8 @@ enum Log_Types {
 };
 
 struct config_struct {
-    //initializer with defaults
-    config_struct() {
-        sock_path = "./pq.socket";
-        sock_created = false;
-        ncpus = 1;
-        policy = SCHEDULE_FIFO;
-        microseconds = 10;
-    }
-
     std::string sock_path;
-    bool sock_created;
+    int sock_fd;
     int ncpus;
     int policy;
     int microseconds;

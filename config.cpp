@@ -10,6 +10,8 @@
 // Operating Systems - Project 02: pq
 // config.cpp
 
+extern config_struct config;
+
 void usage(int exit_code) {
 
     std::string usage_str = 
@@ -17,7 +19,7 @@ void usage(int exit_code) {
     "\n"
     "General Options:\n"
     "   -h                 Print this help message\n"
-    "   -f PATH            Path to IPC channel\n"
+    "   -f PATH            Path to create socket\n"
     "\n"
     "Client Options:\n"
     "   add COMMAND        Add COMMAND to queue\n"
@@ -36,9 +38,14 @@ void usage(int exit_code) {
     exit(exit_code);
 }
 
-config_struct read_args(int argc, char* argv[]) {
+void read_args(int argc, char* argv[]) {
 
-    config_struct config;
+    //set defaults
+    config.sock_path = "/tmp/pq.socket_jbeiter";
+    config.sock_fd = 0;
+    config.ncpus = 1;
+    config.policy = SCHEDULE_FIFO;
+    config.microseconds = 10;
 
     //read command line arguments
     int argind = 1;
@@ -85,7 +92,7 @@ config_struct read_args(int argc, char* argv[]) {
     //if we've read all arguments, should run process as the server
     if(argind == argc) {
         config.is_server = true;
-        return config;
+        return;
     }
     else { //otherwise, it's the client
         config.is_server = false;
@@ -109,6 +116,4 @@ config_struct read_args(int argc, char* argv[]) {
             log_exit(LOG_ERROR,"Too many command line arguments, exiting...");
         }
     }
-
-    return config;
 }
