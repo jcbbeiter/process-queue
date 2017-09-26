@@ -45,7 +45,7 @@ void read_args(int argc, char* argv[]) {
     config.sock_fd = 0;
     config.ncpus = 1;
     config.policy = SCHEDULE_FIFO;
-    config.microseconds = 10;
+    config.microseconds = 1000;
 
     //read command line arguments
     int argind = 1;
@@ -104,6 +104,9 @@ void read_args(int argc, char* argv[]) {
             }
             if(config.command == "") {
                 log_exit(LOG_ERROR, "No command to add to server, exiting...");
+            }
+            else if(config.command.length() > 1019) {
+                log_exit(LOG_ERROR, "Error: command too long");
             }
         }
         else if (config.client_option != "status" &&

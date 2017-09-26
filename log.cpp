@@ -32,10 +32,10 @@ void cleanup(int exit_code) {
 
     log(LOG_INFO, "Cleaning up...");
 
-    if(config.sock_fd > 0) {
+    if(config.is_server &&config.sock_fd > 0) {
         log(LOG_INFO, "Removing socket \"" + config.sock_path + "\" ...");
-        std::cout << "config.sock_fd: " << config.sock_fd << std::endl;
         unlink(config.sock_path.c_str());
+        close(config.sock_fd);
     }
 
     log(LOG_INFO, "Goodbye!");
