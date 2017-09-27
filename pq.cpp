@@ -11,8 +11,9 @@
 // Operating Systems - Project 02: pq
 // pq.cpp
 
-// config is global - to be universally accessible
+// config and scheduler are global - to be universally accessible
 config_struct config;
+scheduler_struct scheduler;
 
 void sigint_handler(int signal) {
     log(LOG_INFO, "Caught SIGINT");
@@ -25,14 +26,6 @@ int main(int argc, char* argv[]) {
 
     //read command line arguments into config struct
     read_args(argc, argv);
-
-    /*std::cout << "sock_path: " << config.sock_path << std::endl;
-    std::cout << "ncpus: " << config.ncpus << std::endl;
-    std::cout << "policy: " << config.policy << std::endl;
-    std::cout << "microseconds: " << config.microseconds << std::endl;
-    std::cout << "is_server: " << config.is_server << std::endl;
-    std::cout << "client_option: " << config.client_option << std::endl;
-    std::cout << "command: " << config.command << std::endl;*/
 
     if(config.is_server) {
         server();

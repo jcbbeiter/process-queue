@@ -5,7 +5,7 @@ LDFLAGS=	-L.
 TARGETS=	pq
 all:	$(TARGETS)
 
-$(TARGETS):	pq.o config.o log.o server.o client.o scheduler.o
+$(TARGETS):	pq.o config.o log.o server.o client.o scheduler.o process.o
 	@echo "Linking pq..."
 	@$(LD) $(LDFLAGS) -o $@ $^
 

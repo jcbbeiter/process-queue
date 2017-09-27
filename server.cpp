@@ -4,16 +4,19 @@
 #include <sys/un.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <csignal>
 
 #include "types.h"
 #include "log.h"
 #include "server.h"
+#include "scheduler.h"
 
 // Jacob Beiter
 // Operating Systems - Project 02: pq
 // server.cpp
 
 extern config_struct config;
+extern scheduler_struct scheduler;
 
 int create_socket() {
 
@@ -48,6 +51,7 @@ int create_socket() {
     return 0;
 }
 
+// use poll() to check if there's a pending connection
 bool socket_has_data() {
     struct pollfd fds[1];
     fds[0].fd  = config.sock_fd;
@@ -55,11 +59,13 @@ bool socket_has_data() {
 
     int ret;
 
-    if((ret = poll(fds, 1, config.microseconds/1000)) == -1) {
+    while((ret = poll(fds, 1, config.microseconds/1000)) == -1) {
+        if(errno == EINTR)
+            continue;
         log(LOG_ERROR, "Error: " + std::string(strerror(errno)));
         return 0;
     }
-    else if(ret == 0) {
+    if(ret == 0) {
         return 0;
     }
     else
@@ -87,8 +93,12 @@ std::string read_client_message(int& client_fd) {
 void handle_request(std::string message, int& client_fd) {
     if(message == "status") {
         log(LOG_INFO, "Handling status request...");
-        std::string message = "Your write request was handled";
+        std::string message = "running: " + std::to_string(scheduler.running_map.size()) + 
+                                "\nwaiting: " + std::to_string(scheduler.waiting_queue.size());
         write(client_fd, message.c_str(), message.length() + 1);
+        for( auto s : scheduler.waiting_queue) {
+        write(client_fd, s.command.c_str(), s.command.length() + 1);
+        }
     }
     else if(message == "running") {
         log(LOG_INFO, "Handling running request...");
@@ -106,7 +116,8 @@ void handle_request(std::string message, int& client_fd) {
         write(client_fd, message.c_str(), message.length() + 1);
     }
     else { // command is add
-        log(LOG_INFO, "Handling add request...");
+        add_process(message.substr(4,message.length()-4));
+
         std::string message = "Your add request was handled";
         write(client_fd, message.c_str(), message.length() + 1);
     }
@@ -119,8 +130,37 @@ void server() {
         cleanup(EXIT_FAILURE);
     }
 
+    /* ------------------------------------------------------------------------------
+     * On the design for the scheduler -- having a struct that functions as all
+     * of the different types, and only using one third of it depending on scheduler
+     * type -- This project is a project that would normally be done in C, but done
+     * in C++ for certain conveniences (esp. STL data structures). The design
+     * design decision to have it this way is an effort to stick close to the C
+     * standard practices, which most of this program tends towards. A better
+     * solution would likely to be have a Scheduler abstract parent class, and the 
+     * different types of scheduler inherit from it so that they can be used 
+     * polymorphically in the server loop.
+     * ------------------------------------------------------------------------------ */
+
+    //initialize scheduler, differently for different types
+    scheduler.policy = config.policy;
+    scheduler.records = std::vector<process_record>();
+    switch(scheduler.policy) {
+        case SCHEDULE_FIFO:
+            scheduler.running_map = std::map<int,process>();
+            scheduler.waiting_queue = std::deque<process>(0);
+            break;
+        case SCHEDULE_RDRN:
+            break;
+        case SCHEDULE_MLFQ:
+            break;
+    }
+
+    signal(SIGCHLD, reap_child);
+
     // server main loop
     while(true) {
+        //read the data from the client, call handler, and close connection
         if(socket_has_data()) {
 
             int client_fd;
@@ -134,6 +174,9 @@ void server() {
             log(LOG_INFO,"Closing connection...");
             close(client_fd);
         }
+
+        // call scheduler
+        schedule();
     }
 }
 

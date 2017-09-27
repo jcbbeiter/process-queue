@@ -15,6 +15,7 @@
 extern config_struct config;
 
 void client() {
+    //create socket address to bind to (hopefully) existing unix socket
     sockaddr_un addr;
     memset (&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
@@ -22,6 +23,7 @@ void client() {
 
     int fd;
 
+    // connect to unix domain socket
     if(( fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         log_exit(LOG_ERROR, "Error creating socket: " + std::string(strerror(errno)));
     }
@@ -32,16 +34,11 @@ void client() {
 
     int count;
 
-    if(config.client_option == "add") {
-        std::string message = config.client_option + " " + config.command;
-        count = write(fd, message.c_str(), message.length()+1);
-        log(LOG_INFO, "Wrote " + std::to_string(count) + " chars to server: " + message);
-    }
-    else {
-        count = write(fd, config.client_option.c_str(), config.client_option.length()+1);
-        log(LOG_INFO, "Wrote " + std::to_string(count) + " chars to server: " + config.client_option);
-    }
-    //TODO: remove this, and count
+    //write message to server
+    count = write(fd, config.client_option.c_str(), config.client_option.length()+1);
+    log(LOG_INFO, "Wrote " + std::to_string(count) + " chars to server: " + config.client_option);
+
+    //TODO: remove this, and remove count
 
     //get response and print to stdout
     char buf[BUFSIZ];

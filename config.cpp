@@ -97,26 +97,26 @@ void read_args(int argc, char* argv[]) {
     else { //otherwise, it's the client
         config.is_server = false;
         config.client_option = argv[argind];
+        //add command to string for add option
         if(config.client_option == "add") {
-            config.command = "";
             while(++argind < argc) {
-                config.command += argv[argind];
+                config.client_option += " " + std::string(argv[argind]);
             }
-            if(config.command == "") {
-                log_exit(LOG_ERROR, "No command to add to server, exiting...");
+            if(config.client_option == "add") {
+                log_exit(LOG_ERROR, "No command to add to server");
             }
-            else if(config.command.length() > 1019) {
-                log_exit(LOG_ERROR, "Error: command too long");
+            else if(config.client_option.length() > 1023) {
+                log_exit(LOG_ERROR, "Command too long");
             }
-        }
+        } //make sure the command is valid
         else if (config.client_option != "status" &&
                     config.client_option != "running" &&
                     config.client_option != "waiting" &&
                     config.client_option != "flush") {
-            log_exit(LOG_ERROR, "Invalid client command \"" + config.client_option + "\", exiting...");
-        }
+            log_exit(LOG_ERROR, "Invalid client command \"" + config.client_option + "\"");
+        } // make sure there's no extra anything at the end
         else if (argind != argc-1) { //none of the other options should have anything after
-            log_exit(LOG_ERROR,"Too many command line arguments, exiting...");
+            log_exit(LOG_ERROR,"Too many command line arguments");
         }
     }
 }
