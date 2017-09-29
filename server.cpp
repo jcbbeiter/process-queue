@@ -18,6 +18,26 @@
 extern config_struct config;
 extern scheduler_struct scheduler;
 
+void block_child() {
+    return;
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask,SIGCHLD);
+    sigprocmask(SIG_BLOCK, &mask, NULL);
+}
+
+void unblock_child() {
+    return;
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask,SIGCHLD);
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
+}
+
+void SIGPIPE_handler(int signal) {
+    log(LOG_ERROR,"Tried to write, client closed connection");
+}
+
 int create_socket() {
 
     log(LOG_INFO, "Attempting to create unix socket at \"" + config.sock_path + "\" ...");
@@ -72,14 +92,17 @@ bool socket_has_data() {
         return 1;
 }
 
-std::string read_client_message(int& client_fd) {
+std::string read_client_message(int& client_fd, FILE* &client_stream) {
     char buf [BUFSIZ];
+    memset(buf,0,BUFSIZ);
 
-    log(LOG_INFO,"Accepting connection...");
+    //log(LOG_INFO,"Accepting connection...");
     if((client_fd = accept(config.sock_fd,NULL,NULL)) == -1) {
         log(LOG_ERROR, "Error accepting connection: " + std::string(strerror(errno)));
         return "";
     }
+
+    client_stream = fdopen(client_fd,"w");
 
     //only one line needs to be read -- client rejects message > 1024 chars
     if(read(client_fd, buf, BUFSIZ) == -1) {
@@ -88,39 +111,6 @@ std::string read_client_message(int& client_fd) {
     }
 
     return std::string(buf);
-}
-
-void handle_request(std::string message, int& client_fd) {
-    if(message == "status") {
-        log(LOG_INFO, "Handling status request...");
-        std::string message = "running: " + std::to_string(scheduler.running_map.size()) + 
-                                "\nwaiting: " + std::to_string(scheduler.waiting_queue.size());
-        write(client_fd, message.c_str(), message.length() + 1);
-        for( auto s : scheduler.waiting_queue) {
-        write(client_fd, s.command.c_str(), s.command.length() + 1);
-        }
-    }
-    else if(message == "running") {
-        log(LOG_INFO, "Handling running request...");
-        std::string message = "Your running request was handled";
-        write(client_fd, message.c_str(), message.length() + 1);
-    }
-    else if(message == "waiting") {
-        log(LOG_INFO, "Handling waiting request...");
-        std::string message = "Your waiting request was handled";
-        write(client_fd, message.c_str(), message.length() + 1);
-    }
-    else if(message == "flush") {
-        log(LOG_INFO, "Handling flush request...");
-        std::string message = "Your flush request was handled";
-        write(client_fd, message.c_str(), message.length() + 1);
-    }
-    else { // command is add
-        add_process(message.substr(4,message.length()-4));
-
-        std::string message = "Your add request was handled";
-        write(client_fd, message.c_str(), message.length() + 1);
-    }
 }
 
 void server() {
@@ -147,7 +137,7 @@ void server() {
     scheduler.records = std::vector<process_record>();
     switch(scheduler.policy) {
         case SCHEDULE_FIFO:
-            scheduler.running_map = std::map<int,process>();
+            scheduler.running_queue = std::deque<process>(0);
             scheduler.waiting_queue = std::deque<process>(0);
             break;
         case SCHEDULE_RDRN:
@@ -157,26 +147,35 @@ void server() {
     }
 
     signal(SIGCHLD, reap_child);
+    signal(SIGPIPE,SIGPIPE_handler);
 
     // server main loop
     while(true) {
         //read the data from the client, call handler, and close connection
         if(socket_has_data()) {
 
+            block_child();
             int client_fd;
-            std::string message = read_client_message(client_fd);
+            FILE* client_stream;
+            std::string message = read_client_message(client_fd, client_stream);
             log(LOG_INFO,"Received: " + message);
 
             if(!message.empty()) {
-                handle_request(message,client_fd);
+                handle_request(message,client_stream);
             }
             
-            log(LOG_INFO,"Closing connection...");
+            //log(LOG_INFO,"Closing connection...");
+
+            fflush(client_stream);
             close(client_fd);
+            fclose(client_stream);
+            unblock_child();
         }
 
         // call scheduler
+        block_child();
         schedule();
+        unblock_child();
     }
 }
 

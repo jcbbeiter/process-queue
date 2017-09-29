@@ -5,5 +5,7 @@
 #include "log.h"
 
 int start_process(process& proc);
+void stop_process(process& proc);
+void update_usage(process& proc);
 
 #endif

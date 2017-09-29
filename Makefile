@@ -5,7 +5,7 @@ LDFLAGS=	-L.
 TARGETS=	pq
 all:	$(TARGETS)
 
-$(TARGETS):	pq.o config.o log.o server.o client.o scheduler.o process.o
+$(TARGETS):	pq.o config.o log.o server.o client.o scheduler.o process.o handler.o
 	@echo "Linking pq..."
 	@$(LD) $(LDFLAGS) -o $@ $^
 
@@ -14,4 +14,5 @@ $(TARGETS):	pq.o config.o log.o server.o client.o scheduler.o process.o
 	@$(CC) $(CFLAGS) -c -o $@ $^
 
 clean:
-	rm *.o pq
+	@echo "Cleaning..."
+	@rm -f *.o pq

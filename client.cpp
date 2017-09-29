@@ -32,23 +32,29 @@ void client() {
         log_exit(LOG_ERROR, "Error connecting: " + std::string(strerror(errno)));
     }
 
-    int count;
 
     //write message to server
-    count = write(fd, config.client_option.c_str(), config.client_option.length()+1);
-    log(LOG_INFO, "Wrote " + std::to_string(count) + " chars to server: " + config.client_option);
 
-    //TODO: remove this, and remove count
+    if(write(fd, config.client_option.c_str(),config.client_option.length()) <= 0) {
+        fprintf(stderr,"Error, couldn't write to server: %s\n",strerror(errno));
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+
+    FILE* fstream = fdopen(fd,"r");
 
     //get response and print to stdout
     char buf[BUFSIZ];
+    memset(buf,0,BUFSIZ);
 
     //print server response
-    while(read(fd,buf,BUFSIZ) > 0) {
-        printf("%s\n",buf);
+    while(fgets(buf,BUFSIZ,fstream) != NULL) {
+        printf("%s",buf);
+        memset(buf,0,BUFSIZ);
     }
 
     close(fd);
+    fclose(fstream);
 
     //client has no cleanup to do
     exit(EXIT_SUCCESS);

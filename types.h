@@ -2,7 +2,6 @@
 #define TYPES_H
 
 #include <deque>
-#include <map>
 #include <vector>
 
 enum Scheduling_Policy {
@@ -29,8 +28,9 @@ struct config_struct {
 struct process {
     int pid;
     std::string command;
-    double user_time;
-    double threshold;
+    std::string state;
+    unsigned long user_time;
+    unsigned long threshold;
     double usage;
     time_t arrival_time;
     time_t start_time;
@@ -44,10 +44,11 @@ struct process_record {
 
 struct scheduler_struct {
     int policy;
+    int count;
     std::vector<process_record> records;
+    std::deque<process> running_queue;
 
     // FIFO
-    std::map<int,process> running_map;
     std::deque<process> waiting_queue;
     
     // RDRN

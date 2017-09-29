@@ -25,7 +25,12 @@ void add_process(std::string command) {
     process new_process;
     new_process.pid = 0;
     new_process.command = command;
+    new_process.state = "Sleeping";
+    new_process.user_time = 0;
+    new_process.threshold = 0;
+    new_process.usage = 0;
     new_process.arrival_time = time_val;
+    new_process.start_time = 0;
 
     switch(scheduler.policy) {
         case SCHEDULE_FIFO:
@@ -39,7 +44,7 @@ void add_process(std::string command) {
             break;
     }
 
-    log(LOG_INFO, "Added process: " + command); 
+    log(LOG_INFO, "Added process " + std::to_string(scheduler.count++) + ": " + command); 
 }
 
 void reap_child(int signal) {
@@ -49,14 +54,26 @@ void reap_child(int signal) {
     time_t finish_time;
     time(&finish_time);
 
-    time_t arrival_time = scheduler.running_map[pid].arrival_time;
-    time_t start_time = scheduler.running_map[pid].start_time;
+    //find process in running queue
+    process doomed;
+
+    for(auto it = scheduler.running_queue.begin(); it < scheduler.running_queue.end(); it++) {
+        if((*it).pid == pid) {
+            doomed = *it;
+            scheduler.running_queue.erase(it);
+            break;
+        }
+    }
+
+
+    time_t arrival_time = doomed.arrival_time;
+    time_t start_time = doomed.start_time;
 
     process_record record;
 
-    record.command = scheduler.running_map[pid].command;
+    record.command = doomed.command;
     record.turnaround_time = finish_time - arrival_time;
-    record.response_time = finish_time - start_time;
+    record.response_time = start_time - arrival_time;
 
     char buf[BUFSIZ];
     sprintf(buf,"Reaped process %d: %s, Turnaround = %ld, Response = %ld",pid,record.command.c_str(),record.turnaround_time,record.response_time);
@@ -65,17 +82,6 @@ void reap_child(int signal) {
 
     scheduler.records.push_back(record);
 
-    switch(scheduler.policy) {
-        case SCHEDULE_FIFO:
-            scheduler.running_map.erase(pid);
-            break;
-        case SCHEDULE_RDRN:
-            log(LOG_INFO,"Implement reaping!");
-            break;
-        case SCHEDULE_MLFQ:
-            log(LOG_INFO,"Implement reaping!");
-            break;
-    }
 }
 
 void schedule() {
@@ -84,7 +90,7 @@ void schedule() {
         case SCHEDULE_FIFO:
             // start processes running if there are process waiting and any free cores
             while(!scheduler.waiting_queue.empty() && 
-                (int) scheduler.running_map.size() < config.ncpus) {
+                (int) scheduler.running_queue.size() < config.ncpus) {
 
                 // get process to start
                 process proc = scheduler.waiting_queue.front();
@@ -95,8 +101,8 @@ void schedule() {
                     log(LOG_ERROR,"Couldn't create process \"" + proc.command + "\", removing...");
                 }
                 else {
-                    //add entry to running map
-                    scheduler.running_map[proc.pid] = proc;
+                    //add entry to running queue
+                    scheduler.running_queue.push_back(proc);
                 }
             }
             break;

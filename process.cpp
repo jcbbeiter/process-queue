@@ -10,6 +10,13 @@
 #include "log.h"
 #include "process.h"
 
+void update_usage(process& proc) {
+}
+
+void stop_process(process& proc) {
+    proc.state = "Sleeping";
+}
+
 int start_process(process& proc) {
 
     // if it doesn't have a pid yet, need to fork and create it
@@ -35,14 +42,14 @@ int start_process(process& proc) {
             }
 
             int argc = args.size();
-            char** argv = (char**)malloc((argc+2)*sizeof(char*));
+            char** argv = (char**)malloc((argc+1)*sizeof(char*));
 
             for(int i = 0; i < argc; i++) {
                 argv[i] = args[i];
             }
 
             //terminate argv
-            argv[argc+1] = NULL;
+            argv[argc] = NULL;
 
             execvp(argv[0],argv);
 
@@ -56,6 +63,7 @@ int start_process(process& proc) {
         }
         else { // parent
             proc.pid = pid;
+            proc.state = "Running";
             time_t time_val;
             time(&time_val);
             proc.start_time = time_val;
