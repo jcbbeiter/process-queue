@@ -1,6 +1,11 @@
 #include <sstream>
 #include <unistd.h>
 #include <cstring>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sstream>
+#include <iostream>
 
 // Jacob Beiter
 // Operating Systems: Project 02 - pq
@@ -10,7 +15,79 @@
 #include "log.h"
 #include "process.h"
 
+double get_uptime() {
+    int fd = 0;
+    if((fd = open("/proc/uptime",O_RDONLY)) == -1) {
+        log(LOG_ERROR,"Couldn't open /proc/uptime");
+    }
+
+    FILE* uptime_file = fdopen(fd,"r");
+    char buf[BUFSIZ];
+
+     if(fgets(buf,BUFSIZ,uptime_file) <= 0) {
+        log(LOG_ERROR, "Error reading uptime from /proc/uptime");
+    }
+
+    double uptime;
+    std::stringstream ss(buf);
+    ss >> uptime;
+
+    close(fd);
+    fclose(uptime_file);
+
+    return uptime;
+}
+
 void update_usage(process& proc) {
+    if(proc.pid == 0)
+        return;
+
+    int fd;
+
+    std::string file_name = "/proc/" + std::to_string(proc.pid) + "/stat";
+    if((fd = open(file_name.c_str(),O_RDONLY)) == -1) {
+        log(LOG_ERROR, "Couldn't open stat file for pid " + std::to_string(proc.pid));
+    }
+
+    FILE* stat_file = fdopen(fd,"r");
+    char buf[BUFSIZ];
+
+    if(fgets(buf,BUFSIZ,stat_file) <= 0) {
+        log(LOG_ERROR, "Error reading stat file for pid " + std::to_string(proc.pid));
+    }
+
+    std::stringstream ss(buf);
+    std::string temp;
+
+    for(int i = 1; i <= 13; i++) {
+        ss >> temp;
+    }
+
+    unsigned long utime;
+    unsigned long stime;
+    unsigned long cutime;
+    unsigned long cstime;
+
+    ss >> utime >> stime >> cutime >> cstime;
+
+    for(int i = 18; i <= 21; i++) {
+        ss >> temp;
+    }
+
+    unsigned long start_time;
+    ss >> start_time;
+
+    double uptime = get_uptime();
+    long clock_rate = sysconf(_SC_CLK_TCK);
+
+    unsigned long total_time = utime + stime;
+    double seconds_since_start = uptime - (start_time / clock_rate);
+
+    proc.user_time = utime;
+    proc.usage = 100 * ((total_time / clock_rate) / seconds_since_start);
+
+    close(fd);
+    fclose(stat_file);
 }
 
 void stop_process(process& proc) {

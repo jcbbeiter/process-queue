@@ -68,22 +68,14 @@ void print_queue_header(FILE* client_stream, std::string title) {
     std::stringstream out;
 
     out << title << ":\n";
-    out << std::setw(6) << "PID";
-    out << " ";
-    out << std::setw(20) << std::left << "COMMAND";
-    out << " ";
-    out << std::setw(8) << std::left << "STATE";
-    out << " ";
-    out << std::setw(8) << std::left << "USER";
-    out << " ";
-    out << std::setw(8) << std::left << "THRESHOLD";
-    out << " ";
-    out << std::setw(7) << std::left << "USAGE";
-    out << " ";
-    out << std::setw(10) << std::left << "ARRIVAL";
-    out << " ";
-    out << std::setw(10) << std::left << "START";
-    out << "\n";
+    out << std::setw(6) << "PID" << ' ';
+    out << std::setw(20) << std::left << "COMMAND" << ' ';
+    out << std::setw(8) << std::left << "STATE" << ' ';
+    out << std::setw(8) << std::left << "USER" << ' ';
+    out << std::setw(7) << std::left << "THRESHOLD" << ' ';
+    out << std::setw(7) << std::left << "USAGE" << ' ';
+    out << std::setw(10) << std::left << "ARRIVAL" << ' ';
+    out << std::setw(10) << std::left << "START" << '\n';
 
     std::string out_str = out.str();
     if(fputs(out_str.c_str(),client_stream) <= 0) {
@@ -95,22 +87,14 @@ void print_queue_header(FILE* client_stream, std::string title) {
 void print_line(FILE* client_stream, process& p) {
     
     std::stringstream out;
-    out << std::setw(6) << p.pid;
-    out << " ";
-    out << std::setw(20) << std::left << p.command;
-    out << " ";
-    out << std::setw(8) << std::left << p.state;
-    out << " ";
-    out << std::setw(8) << std::left << p.user_time;
-    out << " ";
-    out << std::setw(8) << std::left << p.threshold;
-    out << " ";
-    out << std::setw(8) << std::left << p.usage;
-    out << " ";
-    out << std::setw(10) << std::left << p.arrival_time;
-    out << " ";
-    out << std::setw(10) << std::left << p.start_time;
-    out << "\n";
+    out << std::setw(6) << p.pid << ' ';
+    out << std::setw(20) << std::left << p.command << ' ';
+    out << std::setw(8) << std::left << p.state << ' ';
+    out << std::setw(8) << std::left << p.user_time << ' ';
+    out << std::setw(9) << std::left << p.threshold << ' ';
+    out << std::setw(7) << std::left << std::fixed << std::setprecision(2) << p.usage << ' ';
+    out << std::setw(10) << std::left << p.arrival_time << ' ';
+    out << std::setw(10) << std::left << p.start_time << '\n';
     
     std::string out_str = out.str();
     if(fputs(out_str.c_str(),client_stream) <= 0) {
@@ -136,11 +120,15 @@ void handle_request(std::string message, FILE* &client_stream) {
         switch(scheduler.policy) {
             case SCHEDULE_FIFO:
 
-                print_queue_header(client_stream,"Running Queue");
-                print_queue(client_stream,scheduler.running_queue);
+                if(!scheduler.running_queue.empty()) {
+                    print_queue_header(client_stream,"Running Queue");
+                    print_queue(client_stream,scheduler.running_queue);
+                }
 
-                print_queue_header(client_stream,"Waiting Queue");
-                print_queue(client_stream,scheduler.waiting_queue);
+                if(!scheduler.waiting_queue.empty()) {
+                    print_queue_header(client_stream,"Waiting Queue");
+                    print_queue(client_stream,scheduler.waiting_queue);
+                }
                 
                 log(LOG_INFO,"After printing both queues");
                 break;

@@ -40,7 +40,7 @@ void SIGPIPE_handler(int signal) {
 
 int create_socket() {
 
-    log(LOG_INFO, "Attempting to create unix socket at \"" + config.sock_path + "\" ...");
+    log(LOG_INFO, "Attempting to create unix socket \"" + config.sock_path + "\" ...");
 
     sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
@@ -158,14 +158,11 @@ void server() {
             int client_fd;
             FILE* client_stream;
             std::string message = read_client_message(client_fd, client_stream);
-            log(LOG_INFO,"Received: " + message);
 
             if(!message.empty()) {
                 handle_request(message,client_stream);
             }
             
-            //log(LOG_INFO,"Closing connection...");
-
             fflush(client_stream);
             close(client_fd);
             fclose(client_stream);
