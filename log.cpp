@@ -3,12 +3,15 @@
 
 #include "types.h"
 #include "log.h"
+#include "scheduler.h"
+#include "handler.h"
 
 // Jacob Beiter
 // Operating Systems - Project 02: pq
 // log.cpp
 
 extern config_struct config;
+extern scheduler_struct scheduler;
 
 void log(int type, std::string message) {
     time_t time_val;
@@ -39,6 +42,21 @@ void cleanup(int exit_code) {
             close(config.sock_fd);
         }
     }
+
+    //TODO MLFQ
+    
+    int running;
+    int waiting;
+    switch(scheduler.policy) {
+        case SCHEDULE_FIFO:
+        case SCHEDULE_RDRN:
+            running = flush_queue(scheduler.running_queue);
+            waiting = flush_queue(scheduler.waiting_queue);
+            break;
+        case SCHEDULE_MLFQ:
+            break;
+    }
+    log(LOG_INFO,"Flushed " + std::to_string(running) + " running and " + std::to_string(waiting) + " waiting processes");
 
     log(LOG_INFO, "Goodbye!");
     exit(exit_code);

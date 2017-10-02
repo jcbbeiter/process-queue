@@ -18,7 +18,7 @@ enum Log_Types {
 struct config_struct {
     std::string sock_path;
     int sock_fd;
-    int ncpus;
+    unsigned int ncpus;
     int policy;
     int microseconds;
     bool is_server;
@@ -35,7 +35,6 @@ struct process {
     double usage;
     time_t arrival_time;
     time_t start_time;
-    bool killed;
 };
 
 struct process_record {
@@ -50,10 +49,8 @@ struct scheduler_struct {
     std::vector<process_record> records;
     std::deque<process> running_queue;
 
-    // FIFO
+    // FIFO and RDRN
     std::deque<process> waiting_queue;
-    
-    // RDRN
 
     // MLFQ
 };

@@ -48,6 +48,7 @@ void update_usage(process& proc) {
     std::string file_name = "/proc/" + std::to_string(proc.pid) + "/stat";
     if((fd = open(file_name.c_str(),O_RDONLY)) == -1) {
         log(LOG_ERROR, "Couldn't open stat file for pid " + std::to_string(proc.pid));
+        return;
     }
 
     FILE* stat_file = fdopen(fd,"r");
@@ -55,6 +56,7 @@ void update_usage(process& proc) {
 
     if(fgets(buf,BUFSIZ,stat_file) <= 0) {
         log(LOG_ERROR, "Error reading stat file for pid " + std::to_string(proc.pid));
+        return;
     }
 
     std::stringstream ss(buf);
@@ -102,7 +104,7 @@ int start_process(process& proc) {
     if(proc.pid == 0) {
         pid_t pid = fork();
 
-        if(pid < 0) {
+        if(pid == -1) {
             log(LOG_ERROR, "Couldn't fork");
             return -1;
         }
@@ -150,7 +152,9 @@ int start_process(process& proc) {
             return 0;
         }
     }
-    else { // just need to send it SIGCONT
+    else { // just need to send it SIGCONT | TODO RDRN
+        kill(proc.pid, SIGCONT);
+        proc.state = "Running";
     }
 
     return 0;

@@ -45,7 +45,7 @@ void read_args(int argc, char* argv[]) {
     config.sock_fd = 0;
     config.ncpus = 1;
     config.policy = SCHEDULE_FIFO;
-    config.microseconds = 1000;
+    config.microseconds = 5000;
 
     //read command line arguments
     int argind = 1;
@@ -67,6 +67,9 @@ void read_args(int argc, char* argv[]) {
                 break;
             case 'n':
                 config.ncpus = std::stoi(argv[++argind]);
+                if(config.ncpus < 1) {
+                    log_exit(LOG_ERROR,"Invalid number of cores: " + std::to_string(config.ncpus));
+                }
                 break;
             case 'p':
                     argind++;

@@ -122,10 +122,10 @@ void server() {
 
     /* ------------------------------------------------------------------------------
      * On the design for the scheduler -- having a struct that functions as all
-     * of the different types, and only using one third of it depending on scheduler
+     * of the different types, and only using certain parts of it depending on scheduler
      * type -- This project is a project that would normally be done in C, but done
-     * in C++ for certain conveniences (esp. STL data structures). The design
-     * design decision to have it this way is an effort to stick close to the C
+     * in C++ for certain conveniences (esp. STL data structures). The
+     * design decision to have it this way is an effort to stick closer to the C
      * standard practices, which most of this program tends towards. A better
      * solution would likely to be have a Scheduler abstract parent class, and the 
      * different types of scheduler inherit from it so that they can be used 
@@ -141,12 +141,20 @@ void server() {
             scheduler.running_queue = std::deque<process>(0);
             scheduler.waiting_queue = std::deque<process>(0);
             break;
-        case SCHEDULE_MLFQ:
+        case SCHEDULE_MLFQ: //TODO MLFQ
             break;
     }
 
-    signal(SIGCHLD, reap_child);
     signal(SIGPIPE,SIGPIPE_handler);
+    //signal(SIGCHLD, reap_child);
+
+    struct sigaction sa;
+    sa.sa_handler = &reap_child;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    if (sigaction(SIGCHLD, &sa, 0) == -1) {
+        log_exit(LOG_ERROR,"Error setting SIGCHLD handler");
+    }
 
     // server main loop
     while(true) {
@@ -162,6 +170,7 @@ void server() {
                 handle_request(message,client_stream);
             }
             
+            //flush and close client connection
             fflush(client_stream);
             close(client_fd);
             fclose(client_stream);
@@ -169,9 +178,7 @@ void server() {
         }
 
         // call scheduler
-        block_child();
         schedule();
-        unblock_child();
     }
 }
 

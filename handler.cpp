@@ -33,7 +33,7 @@ void print_overview(FILE* client_stream) {
             waiting_count = scheduler.waiting_queue.size();
             running_count = scheduler.running_queue.size();
             break;
-        case SCHEDULE_MLFQ:
+        case SCHEDULE_MLFQ: //TODO MLFQ
             log(LOG_INFO,"Implement overview for this policy...");
             break;
     }
@@ -90,7 +90,6 @@ int flush_queue(std::deque<process>& queue) {
         }
         else {
             log(LOG_INFO,"Terminated unfinished process " + std::to_string(queue.front().pid) + ": " + queue.front().command);
-            queue.front().killed = 1;
             kill(queue.front().pid, SIGKILL);
         }
         queue.pop_front();
@@ -148,7 +147,7 @@ void handle_request(std::string message, FILE* &client_stream) {
                 
                 break;
                 break;
-            case SCHEDULE_MLFQ:
+            case SCHEDULE_MLFQ: //TODO MLFQ
                 log(LOG_INFO,"Implement status for MLFQ...");
                 break;
         }
@@ -166,7 +165,7 @@ void handle_request(std::string message, FILE* &client_stream) {
                     fputs("No processes running\n",client_stream);
                 }
                 break;
-            case SCHEDULE_MLFQ:
+            case SCHEDULE_MLFQ: //TODO MLFQ
                 log(LOG_INFO,"Implement running for MLFQ...");
             break;
         }
@@ -183,13 +182,14 @@ void handle_request(std::string message, FILE* &client_stream) {
                     fputs("No processes waiting\n",client_stream);
                 }
                 break;
-            case SCHEDULE_MLFQ:
+            case SCHEDULE_MLFQ: //TODO MLFQ
                 log(LOG_INFO,"Implement waiting for MLFQ...");
             break;
         }
     }
     else if(message == "flush") {
-        log(LOG_INFO,"Flushing process queues...");
+        log(LOG_INFO,"Flushing process queues and records...");
+        scheduler.records.clear();
         int running;
         int waiting;
         switch(scheduler.policy) {
@@ -198,7 +198,7 @@ void handle_request(std::string message, FILE* &client_stream) {
                 running = flush_queue(scheduler.running_queue);
                 waiting = flush_queue(scheduler.waiting_queue);
                 break;
-            case SCHEDULE_MLFQ:
+            case SCHEDULE_MLFQ: //TODO MLFQ
                 log(LOG_INFO,"Implement flushing for MLFQ...");
             break;
         }
