@@ -27,6 +27,7 @@ struct config_struct {
 
 struct process {
     int pid;
+    int num;
     std::string command;
     std::string state;
     unsigned long user_time;
@@ -34,6 +35,7 @@ struct process {
     double usage;
     time_t arrival_time;
     time_t start_time;
+    bool killed;
 };
 
 struct process_record {

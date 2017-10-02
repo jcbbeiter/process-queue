@@ -31,20 +31,21 @@ void add_process(std::string command) {
     new_process.usage = 0;
     new_process.arrival_time = time_val;
     new_process.start_time = 0;
+    new_process.killed = false;;
+    new_process.num = ++scheduler.count;
 
     switch(scheduler.policy) {
         case SCHEDULE_FIFO:
-            scheduler.waiting_queue.push_back(new_process);
-            break;
         case SCHEDULE_RDRN:
-            log(LOG_INFO, "adding for this policy not implemented yet");
+            scheduler.waiting_queue.push_back(new_process);
             break;
         case SCHEDULE_MLFQ:
             log(LOG_INFO, "adding for this policy not implemented yet");
             break;
     }
 
-    log(LOG_INFO, "Added process " + std::to_string(scheduler.count++) + ": " + command); 
+    
+    log(LOG_INFO, "Added process " + std::to_string(scheduler.count) + ": " + command); 
 }
 
 void reap_child(int signal) {
@@ -56,32 +57,34 @@ void reap_child(int signal) {
 
     //find process in running queue
     process doomed;
+    bool found = false;
 
     for(auto it = scheduler.running_queue.begin(); it < scheduler.running_queue.end(); it++) {
         if((*it).pid == pid) {
             doomed = *it;
             scheduler.running_queue.erase(it);
+            found = true;
             break;
         }
     }
 
+    if(found && !doomed.killed) {
+        time_t arrival_time = doomed.arrival_time;
+        time_t start_time = doomed.start_time;
 
-    time_t arrival_time = doomed.arrival_time;
-    time_t start_time = doomed.start_time;
+        process_record record;
 
-    process_record record;
+        record.command = doomed.command;
+        record.turnaround_time = finish_time - arrival_time;
+        record.response_time = start_time - arrival_time;
 
-    record.command = doomed.command;
-    record.turnaround_time = finish_time - arrival_time;
-    record.response_time = start_time - arrival_time;
+        char buf[BUFSIZ];
+        sprintf(buf,"Reaped process %d: %s, Turnaround = %ld, Response = %ld",pid,record.command.c_str(),record.turnaround_time,record.response_time);
 
-    char buf[BUFSIZ];
-    sprintf(buf,"Reaped process %d: %s, Turnaround = %ld, Response = %ld",pid,record.command.c_str(),record.turnaround_time,record.response_time);
+        log(LOG_INFO,std::string(buf));
 
-    log(LOG_INFO,std::string(buf));
-
-    scheduler.records.push_back(record);
-
+        scheduler.records.push_back(record);
+    }
 }
 
 void schedule() {
@@ -98,7 +101,7 @@ void schedule() {
 
                 // start it
                 if(start_process(proc) == -1) {
-                    log(LOG_ERROR,"Couldn't create process \"" + proc.command + "\", removing...");
+                    log(LOG_ERROR,"Couldn't create process : " + proc.command + ", removing...");
                 }
                 else {
                     //add entry to running queue

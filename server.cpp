@@ -137,10 +137,9 @@ void server() {
     scheduler.records = std::vector<process_record>();
     switch(scheduler.policy) {
         case SCHEDULE_FIFO:
+        case SCHEDULE_RDRN:
             scheduler.running_queue = std::deque<process>(0);
             scheduler.waiting_queue = std::deque<process>(0);
-            break;
-        case SCHEDULE_RDRN:
             break;
         case SCHEDULE_MLFQ:
             break;

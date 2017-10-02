@@ -12,5 +12,6 @@ void get_overview(int client_fd);
 void print_queue_header(int client_fd,std::string title);
 void print_queue(int client_fd, std::deque<process>& queue);
 void print_line(process& p);
+int flush_queue(std::deque<process>& queue);
 
 #endif

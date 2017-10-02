@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <sys/types.h>
+#include <sys/signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sstream>
@@ -91,6 +92,7 @@ void update_usage(process& proc) {
 }
 
 void stop_process(process& proc) {
+    kill(proc.pid, SIGSTOP);
     proc.state = "Sleeping";
 }
 
@@ -144,6 +146,7 @@ int start_process(process& proc) {
             time_t time_val;
             time(&time_val);
             proc.start_time = time_val;
+            log(LOG_INFO,"Started process " + std::to_string(proc.pid) + ": " + proc.command);
             return 0;
         }
     }
