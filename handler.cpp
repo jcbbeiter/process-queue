@@ -33,8 +33,16 @@ void print_overview(FILE* client_stream) {
             waiting_count = scheduler.waiting_queue.size();
             running_count = scheduler.running_queue.size();
             break;
-        case SCHEDULE_MLFQ: //TODO MLFQ
-            log(LOG_INFO,"Implement overview for this policy...");
+        case SCHEDULE_MLFQ:
+            running_count = scheduler.running_queue.size();
+
+            levels = 0;
+            for(int i = 0; i < scheduler.levels; i++) {
+                if(!scheduler.waiting_queues[i].empty()) {
+                    levels++;
+                    waiting_count += scheduler.waiting_queues[i].size();
+                }
+            }
             break;
     }
 
@@ -90,7 +98,7 @@ int flush_queue(std::deque<process>& queue) {
         }
         else {
             log(LOG_INFO,"Terminated unfinished process " + std::to_string(queue.front().pid) + ": " + queue.front().command);
-            kill(queue.front().pid, SIGKILL);
+            kill(queue.front().pid, SIGTERM);
         }
         queue.pop_front();
         count++;
@@ -146,31 +154,33 @@ void handle_request(std::string message, FILE* &client_stream) {
                 }
                 
                 break;
-                break;
-            case SCHEDULE_MLFQ: //TODO MLFQ
-                log(LOG_INFO,"Implement status for MLFQ...");
+            case SCHEDULE_MLFQ:
+                if(!scheduler.running_queue.empty()) {
+                    print_queue_header(client_stream,"Running Queue");
+                    print_queue(client_stream,scheduler.running_queue);
+                }
+
+                for(int i = 0; i < scheduler.levels; i++) {
+                    if(!scheduler.waiting_queues[i].empty()) {
+                        print_queue_header(client_stream,"Level " + std::to_string(i));
+                        print_queue(client_stream,scheduler.waiting_queues[i]);
+                    }
+                }
                 break;
         }
     }
     else if(message == "running") {
 
-        switch(scheduler.policy) {
-            case SCHEDULE_FIFO:
-            case SCHEDULE_RDRN:
-                if(!scheduler.running_queue.empty()) {
-                    print_queue_header(client_stream,"Running Queue");
-                    print_queue(client_stream,scheduler.running_queue);
-                }
-                else {
-                    fputs("No processes running\n",client_stream);
-                }
-                break;
-            case SCHEDULE_MLFQ: //TODO MLFQ
-                log(LOG_INFO,"Implement running for MLFQ...");
-            break;
+        if(!scheduler.running_queue.empty()) {
+            print_queue_header(client_stream,"Running Queue");
+            print_queue(client_stream,scheduler.running_queue);
+        }
+        else {
+            fputs("No processes running\n",client_stream);
         }
     }
     else if(message == "waiting") {
+        bool printed = 0;
         switch(scheduler.policy) {
             case SCHEDULE_FIFO:
             case SCHEDULE_RDRN:
@@ -182,8 +192,17 @@ void handle_request(std::string message, FILE* &client_stream) {
                     fputs("No processes waiting\n",client_stream);
                 }
                 break;
-            case SCHEDULE_MLFQ: //TODO MLFQ
-                log(LOG_INFO,"Implement waiting for MLFQ...");
+            case SCHEDULE_MLFQ:
+                for(int i = 0; i < scheduler.levels; i++) {
+                    if(!scheduler.waiting_queues[i].empty()) {
+                        printed =1;
+                        print_queue_header(client_stream,"Level " + std::to_string(i));
+                        print_queue(client_stream,scheduler.waiting_queue);
+                    }
+                }
+                if(!printed) {
+                    fputs("No processes waiting\n",client_stream);
+                }
             break;
         }
     }
@@ -198,8 +217,11 @@ void handle_request(std::string message, FILE* &client_stream) {
                 running = flush_queue(scheduler.running_queue);
                 waiting = flush_queue(scheduler.waiting_queue);
                 break;
-            case SCHEDULE_MLFQ: //TODO MLFQ
-                log(LOG_INFO,"Implement flushing for MLFQ...");
+            case SCHEDULE_MLFQ:
+                running = flush_queue(scheduler.running_queue);
+                for(int i = 0; i < scheduler.levels; i++) {
+                    waiting += flush_queue(scheduler.waiting_queues[i]);
+                }
             break;
         }
         std::string message = "Flushed " + std::to_string(running) + " running processes and " + std::to_string(waiting) + " waiting processes\n";

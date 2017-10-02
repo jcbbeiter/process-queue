@@ -135,13 +135,17 @@ void server() {
     //initialize scheduler, differently for different types
     scheduler.policy = config.policy;
     scheduler.records = std::vector<process_record>();
+
     switch(scheduler.policy) {
         case SCHEDULE_FIFO:
         case SCHEDULE_RDRN:
             scheduler.running_queue = std::deque<process>(0);
             scheduler.waiting_queue = std::deque<process>(0);
             break;
-        case SCHEDULE_MLFQ: //TODO MLFQ
+        case SCHEDULE_MLFQ:
+            scheduler.levels = 8;
+            scheduler.running_queue = std::deque<process>(0);
+            scheduler.waiting_queues = std::vector<std::deque<process>> (scheduler.levels,std::deque<process>());
             break;
     }
 

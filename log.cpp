@@ -43,8 +43,6 @@ void cleanup(int exit_code) {
         }
     }
 
-    //TODO MLFQ
-    
     int running;
     int waiting;
     switch(scheduler.policy) {
@@ -54,6 +52,10 @@ void cleanup(int exit_code) {
             waiting = flush_queue(scheduler.waiting_queue);
             break;
         case SCHEDULE_MLFQ:
+            running = flush_queue(scheduler.running_queue);
+            for(int i = 0; i < scheduler.levels; i++) {
+            waiting += flush_queue(scheduler.waiting_queues[i]);
+            }
             break;
     }
     log(LOG_INFO,"Flushed " + std::to_string(running) + " running and " + std::to_string(waiting) + " waiting processes");

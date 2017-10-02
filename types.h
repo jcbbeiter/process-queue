@@ -30,6 +30,7 @@ struct process {
     int num;
     std::string command;
     std::string state;
+    int level;
     unsigned long user_time;
     unsigned long threshold;
     double usage;
@@ -53,6 +54,9 @@ struct scheduler_struct {
     std::deque<process> waiting_queue;
 
     // MLFQ
+    int levels;
+    int thresholds[8] = {25, 40, 65, 100, 145, 200, 275, 10000};
+    std::vector<std::deque<process>> waiting_queues;
 };
 
 #endif
