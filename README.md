@@ -142,7 +142,7 @@ Demonstration
 Errata
 ------
 
-> This project more or less works as intended. There was a bug near the end in which a process would not be removed from the records queues when it was reaped, so the server would try to open a non-existent proc/pid/stat file. It happened a few times and then I couldn't reproduce it anymore, so I think it may be gone. To handle it, though, on repeated failures to open the proc/pid/stat file for a process, the server abandons the record, because it's no longer running on the host OS.
+> This project more or less works as intended. There was a bug near the end in which a process would not be removed from the records queues when it was reaped, so the server would try to open a non-existent proc/pid/stat file. It happened twice and then after further changes I could no longer replicate it -- I'm pretty sure it's fixed. Regardless, on repeated failures to open the proc/pid/stat file for a process, the server abandons the record because it's no longer running on the host OS.
 
 Extra Credit
 ------------
