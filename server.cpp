@@ -146,6 +146,7 @@ void server() {
             scheduler.levels = 8;
             scheduler.running_queue = std::deque<process>(0);
             scheduler.waiting_queues = std::vector<std::deque<process>> (scheduler.levels,std::deque<process>());
+            scheduler.boost_counter = 0;
             break;
     }
 

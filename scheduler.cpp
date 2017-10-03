@@ -34,6 +34,7 @@ void add_process(std::string command) {
     new_process.arrival_time = time_val;
     new_process.start_time = 0;
     new_process.num = ++scheduler.count;
+    new_process.failed_usage = false;
 
     if(scheduler.policy == SCHEDULE_MLFQ) {
         new_process.threshold = scheduler.thresholds[0];
@@ -198,27 +199,51 @@ void schedule() {
             }
 
             break;
-        case SCHEDULE_MLFQ: //TODO MLFQ, priority boost
+        case SCHEDULE_MLFQ:
             // clear the running queue, updating thresholds and 
             // lowering priority if necessary
             while(!scheduler.running_queue.empty()) {
                 process to_pause = scheduler.running_queue.front();
                 scheduler.running_queue.pop_front();
-                update_usage(to_pause);
+                if(update_usage(to_pause) == -1) {
+                    log(LOG_ERROR,"Consecutive failures to read usage of process " + 
+                                    std::to_string(to_pause.pid) + ": " + 
+                                    to_pause.command + ", removing...");
+                    kill(to_pause.pid, SIGKILL);
+                    continue;
+                }
                 //lower priority if gone over usage threshold
                 if(to_pause.user_time > to_pause.threshold && 
                                         to_pause.level < (scheduler.levels-1)) {
                     to_pause.level++;
                     to_pause.threshold = to_pause.user_time + scheduler.thresholds[to_pause.level];
-                    log(LOG_INFO,"Moving process " + std::to_string(to_pause.pid) + ": " + 
-                                    to_pause.command + " from level " + std::to_string(to_pause.level) + 
-                                    " to level " + std::to_string(to_pause.level+1));
                 }
                 stop_process(to_pause);
                 scheduler.waiting_queues[to_pause.level].push_back(to_pause);
             }
 
-            //priority boost
+            //priority boost if it's been long enough since the last one
+            //interval is 10 thousand time slices
+            if(++scheduler.boost_counter >= 10000) {
+                scheduler.boost_counter = 0;
+                log(LOG_INFO,"Performing priority boost...");
+
+                //reset threshold for all processes in first queue
+                for(process& proc : scheduler.waiting_queues[0]) {
+                    proc.threshold = proc.user_time + scheduler.thresholds[0];
+                }
+
+                //move processes from all other queues to first level
+                for(int i = 1; i < scheduler.levels; i++) {
+                    while(!scheduler.waiting_queues[i].empty()) {
+                        process proc = scheduler.waiting_queues[i].front();
+                        scheduler.waiting_queues[i].pop_front();
+                        proc.threshold = proc.user_time + scheduler.thresholds[0];
+                        proc.level = 0;
+                        scheduler.waiting_queues[0].push_back(proc);
+                    }
+                }
+            }
 
             to_start = config.ncpus;
             started = 0;
@@ -238,6 +263,10 @@ void schedule() {
                         started++;
                     }
                 }
+            }
+            //if there are no processes running, reset priority boost counter
+            if(started == 0) {
+                scheduler.boost_counter = 0;
             }
             
             break;

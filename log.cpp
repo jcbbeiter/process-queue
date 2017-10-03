@@ -1,9 +1,11 @@
 #include <iostream>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "types.h"
 #include "log.h"
 #include "scheduler.h"
+#include "handler.h"
 #include "handler.h"
 
 // Jacob Beiter
@@ -41,25 +43,26 @@ void cleanup(int exit_code) {
             unlink(config.sock_path.c_str());
             close(config.sock_fd);
         }
-    }
 
-    int running;
-    int waiting;
-    switch(scheduler.policy) {
-        case SCHEDULE_FIFO:
-        case SCHEDULE_RDRN:
-            running = flush_queue(scheduler.running_queue);
-            waiting = flush_queue(scheduler.waiting_queue);
-            break;
-        case SCHEDULE_MLFQ:
-            running = flush_queue(scheduler.running_queue);
-            for(int i = 0; i < scheduler.levels; i++) {
-            waiting += flush_queue(scheduler.waiting_queues[i]);
-            }
-            break;
-    }
-    log(LOG_INFO,"Flushed " + std::to_string(running) + " running and " + std::to_string(waiting) + " waiting processes");
+        int running = 0;
+        int waiting = 0;
+        switch(scheduler.policy) {
+            case SCHEDULE_FIFO:
+            case SCHEDULE_RDRN:
+                running = flush_queue(scheduler.running_queue);
+                waiting = flush_queue(scheduler.waiting_queue);
+                break;
+            case SCHEDULE_MLFQ:
+                running = flush_queue(scheduler.running_queue);
+                for(int i = 0; i < scheduler.levels; i++) {
+                    waiting += flush_queue(scheduler.waiting_queues[i]);
+                }
+                break;
+        }
+        log(LOG_INFO,"Flushed " + std::to_string(running) + " running and " + std::to_string(waiting) + " waiting processes");
 
+        print_overview(stdout);
+    }
     log(LOG_INFO, "Goodbye!");
     exit(exit_code);
 }

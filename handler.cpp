@@ -197,7 +197,7 @@ void handle_request(std::string message, FILE* &client_stream) {
                     if(!scheduler.waiting_queues[i].empty()) {
                         printed =1;
                         print_queue_header(client_stream,"Level " + std::to_string(i));
-                        print_queue(client_stream,scheduler.waiting_queue);
+                        print_queue(client_stream,scheduler.waiting_queues[i]);
                     }
                 }
                 if(!printed) {

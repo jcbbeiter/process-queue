@@ -8,9 +8,9 @@
 // handler.h
 
 void handle_request(std::string message, int& client_fd);
-void get_overview(int client_fd);
-void print_queue_header(int client_fd,std::string title);
-void print_queue(int client_fd, std::deque<process>& queue);
+void print_overview(FILE* client_stream);
+void print_queue_header(FILE* client_stream,std::string title);
+void print_queue(FILE* client_stream, std::deque<process>& queue);
 void print_line(process& p);
 int flush_queue(std::deque<process>& queue);
 

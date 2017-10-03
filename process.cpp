@@ -39,16 +39,22 @@ double get_uptime() {
     return uptime;
 }
 
-void update_usage(process& proc) {
+int update_usage(process& proc) {
     if(proc.pid == 0)
-        return;
+        return 0;
 
     int fd;
 
     std::string file_name = "/proc/" + std::to_string(proc.pid) + "/stat";
     if((fd = open(file_name.c_str(),O_RDONLY)) == -1) {
         log(LOG_ERROR, "Couldn't open stat file for pid " + std::to_string(proc.pid));
-        return;
+        if(proc.failed_usage) {
+            return -1;
+        }
+        else {
+            proc.failed_usage = true;
+        }
+        return 0;
     }
 
     FILE* stat_file = fdopen(fd,"r");
@@ -56,7 +62,13 @@ void update_usage(process& proc) {
 
     if(fgets(buf,BUFSIZ,stat_file) <= 0) {
         log(LOG_ERROR, "Error reading stat file for pid " + std::to_string(proc.pid));
-        return;
+        if(proc.failed_usage) {
+            return -1;
+        }
+        else {
+            proc.failed_usage = true;
+        }
+        return 0;
     }
 
     std::stringstream ss(buf);
@@ -91,6 +103,8 @@ void update_usage(process& proc) {
 
     close(fd);
     fclose(stat_file);
+
+    return 0;
 }
 
 void stop_process(process& proc) {
@@ -152,7 +166,7 @@ int start_process(process& proc) {
             return 0;
         }
     }
-    else { // just need to send it SIGCONT | TODO RDRN
+    else { // just need to send it SIGCONT
         kill(proc.pid, SIGCONT);
         proc.state = "Running";
     }

@@ -36,6 +36,7 @@ struct process {
     double usage;
     time_t arrival_time;
     time_t start_time;
+    bool failed_usage;
 };
 
 struct process_record {
@@ -57,6 +58,7 @@ struct scheduler_struct {
     int levels;
     int thresholds[8] = {25, 40, 65, 100, 145, 200, 275, 10000};
     std::vector<std::deque<process>> waiting_queues;
+    int boost_counter;
 };
 
 #endif

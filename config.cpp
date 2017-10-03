@@ -31,7 +31,7 @@ void usage(int exit_code) {
     "Server Options:\n"
     "   -n NCPUS           Number of CPUs\n"
     "   -p POLICY          Scheduling policy (fifo, rdrn, mlfq)\n"
-    "   -t MICROSECONDS    Time between scheduling\n";
+    "   -t MICROSECONDS    Time between scheduling (default 2000)\n";
 
     std::cout << usage_str << std::endl;
 
@@ -45,7 +45,7 @@ void read_args(int argc, char* argv[]) {
     config.sock_fd = 0;
     config.ncpus = 1;
     config.policy = SCHEDULE_FIFO;
-    config.microseconds = 5000;
+    config.microseconds = 2000;
 
     //read command line arguments
     int argind = 1;
