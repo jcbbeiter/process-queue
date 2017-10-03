@@ -7,7 +7,7 @@ import stat
 import time
 
 def run_workload(policy, filename, cores):
-    print "  Benchmarking " + policy.upper() + ", workload '" + filename[18:-3] + "'"
+    print "  Benchmarking " + policy.upper() + ", " + str(cores) + " cores, workload '" + filename[18:-3] + "'"
     # start server
     bit_bucket = open(os.devnull,'w')
     args = ["./pq","-p",policy, "-n", str(cores)]
