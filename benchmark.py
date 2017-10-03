@@ -24,7 +24,7 @@ def run_workload(policy, filename, cores):
     # make temp job executable and run it
     st = os.stat(temp_file)
     os.chmod(temp_file, st.st_mode | stat.S_IEXEC)
-    print "adding jobs..."
+    print "    adding jobs..."
     subprocess.call(temp_file)
 
     # remove temp job file
