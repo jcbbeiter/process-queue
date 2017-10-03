@@ -223,9 +223,11 @@ void schedule() {
             }
 
             //priority boost if it's been long enough since the last one
-            //interval is 10 thousand time slices
-            if(++scheduler.boost_counter >= 10000) {
-                scheduler.boost_counter = 0;
+            //interval is 20 seconds, just use system time to track
+            time_t cur_time;
+            time(&cur_time);
+            if(cur_time - scheduler.last_boost >= 20) {
+                scheduler.last_boost = cur_time;
                 log(LOG_INFO,"Performing priority boost...");
 
                 //reset threshold for all processes in first queue
@@ -266,7 +268,7 @@ void schedule() {
             }
             //if there are no processes running, reset priority boost counter
             if(started == 0) {
-                scheduler.boost_counter = 0;
+                time(&scheduler.last_boost);
             }
             
             break;

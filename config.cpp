@@ -45,7 +45,7 @@ void read_args(int argc, char* argv[]) {
     config.sock_fd = 0;
     config.ncpus = 1;
     config.policy = SCHEDULE_FIFO;
-    config.microseconds = 2000;
+    config.microseconds = 250000;
 
     //read command line arguments
     int argind = 1;

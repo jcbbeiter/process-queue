@@ -58,7 +58,7 @@ struct scheduler_struct {
     int levels;
     int thresholds[8] = {25, 40, 65, 100, 145, 200, 275, 10000};
     std::vector<std::deque<process>> waiting_queues;
-    int boost_counter;
+    time_t last_boost;
 };
 
 #endif
