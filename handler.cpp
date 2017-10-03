@@ -207,8 +207,7 @@ void handle_request(std::string message, FILE* &client_stream) {
         }
     }
     else if(message == "flush") {
-        log(LOG_INFO,"Flushing process queues and records...");
-        scheduler.records.clear();
+        log(LOG_INFO,"Flushing process queues...");
         int running;
         int waiting;
         switch(scheduler.policy) {
@@ -224,6 +223,7 @@ void handle_request(std::string message, FILE* &client_stream) {
                 }
             break;
         }
+
         std::string message = "Flushed " + std::to_string(running) + " running processes and " + std::to_string(waiting) + " waiting processes\n";
         fputs(message.c_str(),client_stream);
     }
