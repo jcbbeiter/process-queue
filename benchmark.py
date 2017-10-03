@@ -78,7 +78,7 @@ for policy in {"fifo", "rdrn", "mlfq"}:
     out_filename = "./benchmarks/benchmark-" + policy.upper() + "-" + str(cores)
     with open(out_filename, 'w') as out_file:
         print "Starting benchmark for policy: " + policy.upper()
-        out_file.write("Benchmark policy: " + policy.upper() + ", " + str(cores) + " cores")
+        out_file.write("Benchmark policy: " + policy.upper() + ", " + str(cores) + " cores\n")
         out_file.write("WORKLOAD".center(15) + " | ")
         out_file.write("TURNAROUND".center(10) + " | ")
         out_file.write("RESPONSE\n")
