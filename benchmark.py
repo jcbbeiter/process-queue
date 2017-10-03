@@ -62,19 +62,23 @@ if len(sys.argv) != 2:
 cores = int(sys.argv[1])
 
 if not (cores > 0 and cores < 32):
-    print "Error: must specify an amount of cores between 1 and 31"
+    print "Error: must specify an amount of cores between 1 and 31 (inclusive)"
     exit(1)
 
 if not os.path.exists("./benchmarks/"):
     os.makedirs("./benchmarks")
     print "making benchmarks directory"
 
+print "Cleaning and building before benchmark..."
+subprocess.call(["make","clean"])
+subprocess.call("make")
+
 print "Running benchmarks with " + str(cores) + " cores..."
 for policy in {"fifo", "rdrn", "mlfq"}:
     out_filename = "./benchmarks/benchmark-" + policy.upper() + "-" + str(cores)
     with open(out_filename, 'w') as out_file:
         print "Starting benchmark for policy: " + policy.upper()
-        out_file.write("Benchmark policy: " + policy.upper() + ", " + str(cores) + " cores"
+        out_file.write("Benchmark policy: " + policy.upper() + ", " + str(cores) + " cores")
         out_file.write("WORKLOAD".center(15) + " | ")
         out_file.write("TURNAROUND".center(10) + " | ")
         out_file.write("RESPONSE\n")
