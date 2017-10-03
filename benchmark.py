@@ -31,7 +31,7 @@ def run_workload(policy, filename, cores):
     os.remove(temp_file)
 
     # repeatedly run ./pq status until no more processes are running
-    print_counter = 0
+    print_counter = 0 
     done = False
     while not done:
         status = subprocess.Popen(["./pq","status"],stdout=subprocess.PIPE)

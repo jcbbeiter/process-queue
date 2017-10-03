@@ -134,24 +134,20 @@ MLFQ will determine that a process needs to be lowered in priority if it has use
 MLFQ will simply do a priority boost at regular intervals.
 
 
-Question for TA:
-In the MLFQ, if a program that is running blocks for I/O and relinquishes the CPU, another program should run while it's blocking. How should we accomplish this? Should the scheduler run more often than once each time slice, and check if the running program is blocking? Is there a way to do that? Some advice would be appreciated.
-
-
 Demonstration
 -------------
 
-> Place a link to your demonstration slides on [Google Drive].
+> [Project demonstration slides] (https://docs.google.com/presentation/d/1yBizXOQDEuG44UyFdm8hYFXBNiRkxpktR98VAhFV5bA/)
 
 Errata
 ------
 
-> Describe any known errors, bugs, or deviations from the requirements.
+> This project more or less works as intended. There was a bug near the end in which a process would not be removed from the records queues when it was reaped, so the server would try to open a non-existent proc/pid/stat file. It happened a few times and then I couldn't reproduce it anymore, so I think it may be gone. To handle it, though, on repeated failures to open the proc/pid/stat file for a process, the server abandons the record, because it's no longer running on the host OS.
 
 Extra Credit
 ------------
 
-> Describe what extra credit (if any) that you implemented.
+> No extra credit was attempted
 
 
 
