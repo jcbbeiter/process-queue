@@ -69,6 +69,10 @@ if not os.path.exists("./benchmarks/"):
     os.makedirs("./benchmarks")
     print "making benchmarks directory"
 
+if os.path.exists("/tmp/pq.socket_jbeiter"):
+    os.remove("/tmp/pq.socket_jbeiter")
+    print "removing old socket before running..."
+
 print "Cleaning and building before benchmark..."
 subprocess.call(["make","clean"])
 subprocess.call("make")
