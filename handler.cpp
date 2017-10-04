@@ -135,7 +135,10 @@ void print_queue(FILE* client_stream, std::deque<process>& queue) {
 
 void handle_request(std::string message, FILE* &client_stream) {
     block_child();
-    if(message == "status") {
+    //trim newline from message
+    if(message[message.length()-1] == '\n')
+        message = message.substr(0,message.length()-1);
+    if(message == "status" || message == "STATUS") {
 
         print_overview(client_stream);
 
@@ -169,7 +172,7 @@ void handle_request(std::string message, FILE* &client_stream) {
                 break;
         }
     }
-    else if(message == "running") {
+    else if(message == "running" || message == "RUNNING") {
 
         if(!scheduler.running_queue.empty()) {
             print_queue_header(client_stream,"Running Queue");
@@ -179,7 +182,7 @@ void handle_request(std::string message, FILE* &client_stream) {
             fputs("No processes running\n",client_stream);
         }
     }
-    else if(message == "waiting") {
+    else if(message == "waiting" || message == "WAITING") {
         bool printed = 0;
         switch(scheduler.policy) {
             case SCHEDULE_FIFO:
@@ -206,10 +209,10 @@ void handle_request(std::string message, FILE* &client_stream) {
             break;
         }
     }
-    else if(message == "flush") {
+    else if(message == "flush" || message == "FLUSH") {
         log(LOG_INFO,"Flushing process queues...");
-        int running;
-        int waiting;
+        int running = 0;
+        int waiting = 0;
         switch(scheduler.policy) {
             case SCHEDULE_FIFO:
             case SCHEDULE_RDRN:
